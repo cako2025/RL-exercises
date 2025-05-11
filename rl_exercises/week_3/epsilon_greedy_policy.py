@@ -72,7 +72,7 @@ class EpsilonGreedyPolicy(object):
         # Return the selected action -- currently always returns 0
 
         # Select action using epsilon-greedy strategy
-        
+
         if self.rng.random() < self.epsilon:
             # Random exploration
             return int(self.rng.integers(self.env.action_space.n))

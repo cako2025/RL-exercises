@@ -136,12 +136,12 @@ class SARSAAgent(AbstractAgent):
         # SARSA Q-value update
         current_q = self.Q[state][action]
         next_q = 0.0 if done else self.Q[next_state][next_action]
-        
+
         # Calculate TD target
         td_target = reward + self.gamma * next_q
-        
+
         # Update Q-value
         new_q = current_q + self.alpha * (td_target - current_q)
         self.Q[state][action] = new_q
-        
+
         return new_q

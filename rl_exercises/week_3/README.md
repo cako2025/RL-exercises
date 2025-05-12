@@ -16,7 +16,7 @@ We’ll leverage two tools:
 
 If not already installed, install [Omegaconf](https://omegaconf.readthedocs.io/en/2.3_branch/) using pip.
 Install Hydra via `pip install hydra-core`.
-Clone the Hypersweeper repository from the link above, then install it into your active `uv` environment using `pip install .` from inside the cloned folder.
+Clone the Hypersweeper repository from the link above, then install it into your active `uv` environment.
 
 We’ve provided a skeleton in `sarsa_sweep.py` to help you get started. 
 This script initializes the Mars Rover environment from last week and runs episodes to measure returns.
@@ -39,6 +39,6 @@ As a final challenge, implement the TD($\lambda$) algorithm in the same style as
 -  [Gridcore environment](https://github.com/automl/TabularTempoRL/blob/master/grid_envs.py)
 - [Four Rooms environment](https://github.com/Farama-Foundation/Minigrid/blob/master/minigrid/envs/fourrooms.py)
 
-Make $n$ (the number of lookahead steps) a configurable parameter, and:
+Make $\lambda$ (the number of lookahead steps) a configurable parameter, and:
 - Run experiments to analyze performance across different values of $n$.
 - Perform hyperparameter tuning for TD($\lambda$) as you did with SARSA.

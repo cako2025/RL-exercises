@@ -265,7 +265,7 @@ class DQNAgent(AbstractAgent):
         recent_rewards: List[float] = []
 
         for frame in range(1, num_frames + 1):
-            action, _ = self.predict_action(state)
+            action = self.predict_action(state)
             next_state, reward, done, truncated, _ = self.env.step(action)
 
             # store and step

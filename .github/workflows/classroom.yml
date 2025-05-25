@@ -46,7 +46,7 @@ jobs:
             run: make install
     
           - name: Run tests
-            run: make test-week-3
+            run: make test-week-5
         
           - name: Autograding Reporter
             uses: classroom-resources/autograding-grading-reporter@v1

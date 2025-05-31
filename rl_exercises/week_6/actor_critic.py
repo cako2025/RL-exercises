@@ -250,9 +250,10 @@ class ActorCriticAgent(AbstractAgent):
             ret = self.compute_returns(list(rewards))
 
             # TODO: compute advantages by subtracting running return
-            adv = ret - self.running_return
+            adv = ...
 
             # TODO: normalize advantages to zero mean and unit variance and use 1e-8 for numerical stability
+            # (Reminder, use unbiased=False for torch tensors)
 
             # TODO: update running return using baseline decay
             # (x = baseline_decay * x + (1 - baseline_decay) * mean return)

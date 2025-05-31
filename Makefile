@@ -66,7 +66,11 @@ test-week-5:
 	$(PYTEST) ${TESTS_DIR}/week_5
 
 test-week-6:
-	$(PYTEST) ${TESTS_DIR}/week_6
+	@if [ -z "$$TEST_FILE" ]; then \
+		$(PYTEST) ${TESTS_DIR}/week_6; \
+	else \
+		$(PYTEST) ${TESTS_DIR}/week_6/$$TEST_FILE; \
+	fi
 
 test-week-7:
 	$(PYTEST) ${TESTS_DIR}/week_7

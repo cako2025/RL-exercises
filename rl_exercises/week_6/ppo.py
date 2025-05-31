@@ -202,15 +202,12 @@ class PPOAgent(AbstractAgent):
         dones = torch.tensor([t[5] for t in trajectory], dtype=torch.float32)  # noqa: F841
 
         # TODO:  compute values and next_values without gradients
-        with torch.no_grad():
-            values = self.value_fn(states)  # noqa: F841
-            next_states = torch.stack(
-                [torch.from_numpy(t[6]).float() for t in trajectory]
-            )
-            next_values = self.value_fn(next_states)  # noqa: F841
+        values = ...  # noqa: F841
+        next_values = ...  # noqa: F841
 
         # TODO: compute advantages and returns
-        advantages, returns = None, None
+        advantages = ...
+        returns = ...
 
         dataset = torch.utils.data.TensorDataset(
             states, actions, old_logps, advantages, returns
@@ -224,19 +221,18 @@ class PPOAgent(AbstractAgent):
                 # TODO: compute policy loss, value loss, and entropy loss
 
                 # TODO: compute new log probabilities by sampling actions from the policy distribution
-                new_logp = None
+                new_logp = ...  # noqa: F841
 
                 # TODO: compute the ratio of new log probabilities to old log probabilities
-                ratio = torch.exp(new_logp - b_oldlogp)  # noqa: F841
 
                 # TODO: compute the clipped surrogate loss using the clipped objective
-                policy_loss = 0.0
+                policy_loss = ...
 
                 # TODO: compute value loss using mean squared error
-                value_loss = 0.0
+                value_loss = ...
 
                 # TODO: compute entropy loss using the distribution's entropy
-                entropy_loss = 0.0
+                entropy_loss = ...
 
                 loss = (
                     policy_loss

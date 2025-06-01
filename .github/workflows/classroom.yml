@@ -46,7 +46,7 @@ jobs:
             run: make install
     
           - name: Run tests
-            run: make test-week-3
+            run: TEST_FILE=test_actor_critic.py make test-week-6
         
           - name: Autograding Reporter
             uses: classroom-resources/autograding-grading-reporter@v1

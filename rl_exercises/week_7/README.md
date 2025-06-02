@@ -11,7 +11,7 @@ Implement RND as seen in the lecture and test it on at least one environment.
 You can choose any environment, but obviously you should make sure exploring novel states is actually useful.
 Good choices could be LunarLander-v3 or simple versions in [MiniGrid](https://minigrid.farama.org/).
 
-We'll use the DQN you built in week 4 as a basis with the extended RNDDQNAgent in 'rnd_dqn.py'.
+We'll use the DQN you built in week 4 (solution pushed, but you can also use your own) as a basis with the extended RNDDQNAgent in 'rnd_dqn.py'.
 Finish implementing this class and test how well RND works compared to epsilon greedy. 
 Do you think this method is a good fit for DQN? Why or why not? 
 Is there a way to see the reason from your training runs?

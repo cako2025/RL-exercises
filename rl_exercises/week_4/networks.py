@@ -26,7 +26,6 @@ class QNetwork(nn.Module):
             Hidden layer size.
         """
         super().__init__()
-
         self.net = nn.Sequential(
             OrderedDict(
                 [

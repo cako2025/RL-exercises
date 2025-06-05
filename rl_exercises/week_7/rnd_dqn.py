@@ -165,6 +165,8 @@ class RNDDQNAgent(DQNAgent):
                         f"Frame {frame}, AvgReward(10): {avg:.2f}, ε={self.epsilon():.3f}"
                     )
 
+        # Saving to .csv for simplicity
+        # Could also be e.g. npz
         print("Training complete.")
         training_data = pd.DataFrame({"steps": steps, "rewards": episode_rewards})
         training_data.to_csv(f"training_data_seed_{self.seed}.csv", index=False)

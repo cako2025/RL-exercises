@@ -4,12 +4,31 @@ Deep Q-Learning with RND implementation.
 
 from typing import Any, Dict, List, Tuple
 
+import os
+
 import gymnasium as gym
 import hydra
 import numpy as np
 import pandas as pd
+import torch
 from omegaconf import DictConfig
 from rl_exercises.week_4.dqn import DQNAgent, set_seed
+
+
+class RNDNetwork(torch.nn.Module):
+    def __init__(self, input_dim, output_dim, hidden_size, n_layers):
+        super().__init__()
+        layers = []
+        layers.append(torch.nn.Linear(input_dim, hidden_size))
+        layers.append(torch.nn.ReLU())
+        for _ in range(n_layers - 1):
+            layers.append(torch.nn.Linear(hidden_size, hidden_size))
+            layers.append(torch.nn.ReLU())
+        layers.append(torch.nn.Linear(hidden_size, output_dim))
+        self.model = torch.nn.Sequential(*layers)
+
+    def forward(self, x):
+        return self.model(x)
 
 
 class RNDDQNAgent(DQNAgent):
@@ -80,7 +99,26 @@ class RNDDQNAgent(DQNAgent):
         )
         self.seed = seed
         # TODO: initialize the RND networks
-        ...
+        self.rnd_hidden_size = rnd_hidden_size
+        self.rnd_lr = rnd_lr
+        self.rnd_update_freq = rnd_update_freq
+        self.rnd_n_layers = rnd_n_layers
+        self.rnd_reward_weight = rnd_reward_weight
+
+        obs_dim = self.env.observation_space.shape[0]
+
+        self.rnd_target = RNDNetwork(
+            obs_dim, self.batch_size, rnd_hidden_size, rnd_n_layers
+        )
+        self.rnd_predictor = RNDNetwork(
+            obs_dim, self.batch_size, rnd_hidden_size, rnd_n_layers
+        )
+        self.rnd_optimizer = torch.optim.Adam(
+            self.rnd_predictor.parameters(), lr=rnd_lr
+        )
+
+        for param in self.rnd_target.parameters():
+            param.requires_grad = False
 
     def update_rnd(
         self, training_batch: List[Tuple[Any, Any, float, Any, bool, Dict]]
@@ -96,7 +134,23 @@ class RNDDQNAgent(DQNAgent):
         # TODO: get states and next_states from the batch
         # TODO: compute the MSE
         # TODO: update the RND network
-        ...
+
+        next_states = np.array(
+            [transition[3] for transition in training_batch], dtype=np.float32
+        )
+        next_states_tensor = torch.tensor(next_states, dtype=torch.float32)
+
+        with torch.no_grad():
+            target_embeddings = self.rnd_target(next_states_tensor)
+        predictor_embeddings = self.rnd_predictor(next_states_tensor)
+
+        mse = ((predictor_embeddings - target_embeddings) ** 2).mean()
+
+        self.rnd_optimizer.zero_grad()
+        mse.backward()
+        self.rnd_optimizer.step()
+
+        return mse.item()
 
     def get_rnd_bonus(self, state: np.ndarray) -> float:
         """Compute the RND bonus for a given state.
@@ -113,7 +167,14 @@ class RNDDQNAgent(DQNAgent):
         """
         # TODO: predict embeddings
         # TODO: get error
-        ...
+        state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(
+            0
+        )  # Batch-Dimension hinzufügen
+        with torch.no_grad():
+            target_embedding = self.rnd_target(state_tensor)
+            predictor_embedding = self.rnd_predictor(state_tensor)
+        mse = ((predictor_embedding - target_embedding) ** 2).mean().item()
+        return mse
 
     def train(self, num_frames: int, eval_interval: int = 1000) -> None:
         """
@@ -131,13 +192,15 @@ class RNDDQNAgent(DQNAgent):
         recent_rewards: List[float] = []
         episode_rewards = []
         steps = []
+        self.total_steps = 0
 
         for frame in range(1, num_frames + 1):
             action = self.predict_action(state)
             next_state, reward, done, truncated, _ = self.env.step(action)
 
             # TODO: apply RND bonus
-            reward += ...
+            rnd_bonus = self.get_rnd_bonus(next_state)
+            reward += self.rnd_reward_weight * rnd_bonus
 
             # store and step
             self.buffer.add(state, action, reward, next_state, done or truncated, {})
@@ -149,8 +212,8 @@ class RNDDQNAgent(DQNAgent):
                 batch = self.buffer.sample(self.batch_size)
                 _ = self.update_agent(batch)
 
-            if self.total_steps % self.rnd_update_freq == 0:
-                self.update_rnd(batch)
+                if self.total_steps % self.rnd_update_freq == 0:
+                    self.update_rnd(batch)
 
             if done or truncated:
                 state, _ = self.env.reset()
@@ -159,17 +222,21 @@ class RNDDQNAgent(DQNAgent):
                 steps.append(frame)
                 ep_reward = 0.0
                 # logging
-                if len(recent_rewards) % 10 == 0:
+                if len(recent_rewards) % eval_interval == 0:
                     avg = np.mean(recent_rewards)
                     print(
                         f"Frame {frame}, AvgReward(10): {avg:.2f}, ε={self.epsilon():.3f}"
                     )
 
+            self.total_steps += 1
+
         # Saving to .csv for simplicity
         # Could also be e.g. npz
         print("Training complete.")
         training_data = pd.DataFrame({"steps": steps, "rewards": episode_rewards})
-        training_data.to_csv(f"training_data_seed_{self.seed}.csv", index=False)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(script_dir, f"training_data_seed_{self.seed}.csv")
+        training_data.to_csv(csv_path, index=False)
 
 
 @hydra.main(config_path="../configs/agent/", config_name="dqn", version_base="1.1")
@@ -179,8 +246,20 @@ def main(cfg: DictConfig):
     set_seed(env, cfg.seed)
 
     # 3) TODO: instantiate & train the agent
-    agent = ...
-    agent.train(...)
+    cfg_agent = cfg.agent
+    agent = RNDDQNAgent(
+        env=env,
+        buffer_capacity=cfg_agent.buffer_capacity,
+        batch_size=cfg_agent.batch_size,
+        lr=cfg_agent.learning_rate,
+        gamma=cfg_agent.gamma,
+        epsilon_start=cfg_agent.epsilon_start,
+        epsilon_final=cfg_agent.epsilon_final,
+        epsilon_decay=cfg_agent.epsilon_decay,
+        target_update_freq=cfg_agent.target_update_freq,
+        seed=cfg.seed,
+    )
+    agent.train(num_frames=cfg.train.num_frames, eval_interval=cfg.train.eval_interval)
 
 
 if __name__ == "__main__":

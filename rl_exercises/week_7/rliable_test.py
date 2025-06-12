@@ -13,25 +13,37 @@ n_seeds = 2
 # Ordner, in dem das aktuelle Skript liegt
 script_dir = os.path.dirname(os.path.abspath(__file__))
 print(script_dir)
-df_s0 = pd.read_csv(os.path.join(script_dir, "training_data_seed_0.csv"))
-df_s1 = pd.read_csv(os.path.join(script_dir, "training_data_seed_1.csv"))
+df_s0 = pd.read_csv(os.path.join(script_dir, "rnd_dqn_training_data_seed_0.csv"))
+df_s1 = pd.read_csv(os.path.join(script_dir, "rnd_dqn_training_data_seed_1.csv"))
+df_s2 = pd.read_csv(os.path.join(script_dir, "dqn_training_data_seed_0.csv"))
+df_s3 = pd.read_csv(os.path.join(script_dir, "dqn_training_data_seed_1.csv"))
 
-min_len = min(len(df_s0), len(df_s1))
+min_len = min(len(df_s0), len(df_s1), len(df_s2), len(df_s3))
 df_s0 = df_s0.iloc[:min_len].reset_index(drop=True)
 df_s1 = df_s1.iloc[:min_len].reset_index(drop=True)
 
+df_s2 = df_s2.iloc[:min_len].reset_index(drop=True)
+df_s3 = df_s3.iloc[:min_len].reset_index(drop=True)
 # Add a column to distinguish between seeds
 # You would do something similar for different algorithms
 df_s0["seed"] = 0
 df_s1["seed"] = 1
+df_s2["seed"] = 0
+df_s3["seed"] = 1
+
 # Combine the dataframes and convert to numpy array
 
 df = pd.concat([df_s0, df_s1], ignore_index=True)
+df_2 = pd.concat([df_s2, df_s3], ignore_index=True)
 # Make sure only one set of steps is attempted to be plotted
 # Obviously the steps should match in such cases!
 steps = df["steps"].to_numpy().reshape((n_seeds, -1))[0]
+steps_2 = df_2["steps"].to_numpy().reshape((n_seeds, -1))[0]
 # You can add other algorithms here
-train_scores = {"dqn": df["rewards"].to_numpy().reshape((n_seeds, -1))}
+train_scores = {
+    "rnd_dqn": df["rewards"].to_numpy().reshape((n_seeds, -1)),
+    "dqn": df_2["rewards"].to_numpy().reshape((n_seeds, -1)),
+}
 
 # This aggregates only IQM, but other options include mean and median
 # Optimality gap exists, but you obviously need optimal scores for that
@@ -50,7 +62,7 @@ plot_sample_efficiency_curve(
     steps + 1,
     iqm_scores,
     iqm_cis,
-    algorithms=["dqn"],
+    algorithms=["rnd_dqn", "dqn"],
     xlabel=r"Number of Evaluations",
     ylabel="IQM Normalized Score",
 )

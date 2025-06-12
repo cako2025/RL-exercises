@@ -101,6 +101,10 @@ class DQNAgent(AbstractAgent):
         self.env = env
         set_seed(env, seed)
 
+        ########## 2025-06-12 ########
+        self.seed = seed
+        ##############################
+
         obs_dim = env.observation_space.shape[0]
         n_actions = env.action_space.n
 
@@ -265,6 +269,11 @@ class DQNAgent(AbstractAgent):
         ep_reward = 0.0
         recent_rewards: List[float] = []
 
+        ########## 2025-06-12 ########
+        steps = []
+        self.total_steps = 0
+        ##############################
+
         for frame in range(1, num_frames + 1):
             action = self.predict_action(state)
             next_state, reward, done, truncated, _ = self.env.step(action)
@@ -282,15 +291,29 @@ class DQNAgent(AbstractAgent):
             if done or truncated:
                 state, _ = self.env.reset()
                 recent_rewards.append(ep_reward)
+                steps.append(frame)
                 ep_reward = 0.0
                 # logging
-                if len(recent_rewards) % 10 == 0:
+                if len(recent_rewards) % eval_interval == 0:
                     avg = np.mean(recent_rewards[-10:])
                     print(
                         f"Frame {frame}, AvgReward(10): {avg:.2f}, ε={self.epsilon():.3f}"
                     )
 
+            self.total_steps += 1
+
         print("Training complete.")
+
+        ########## 2025-06-12 ########
+        import os
+
+        import pandas as pd
+
+        training_data = pd.DataFrame({"steps": steps, "rewards": recent_rewards})
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(script_dir, f"training_data_seed_{self.seed}.csv")
+        training_data.to_csv(csv_path, index=False)
+        ##############################
 
 
 @hydra.main(config_path="../configs/agent/", config_name="dqn", version_base="1.1")

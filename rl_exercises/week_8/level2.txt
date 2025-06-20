@@ -1,0 +1,7 @@
+Example for the python script in level2.py:
+- Transfer Learning (TL) significantly improves the performance of Algorithm 2
+- Algorithm 1 does not benefit from TL, likely because it already performs well without it
+- After applying TL, both algorithms perform similarly -> TL helps bridge the performance gap
+- Assumption: Transfer Learning may be especially beneficial for weaker models
+
+results depands on the size of observations!
